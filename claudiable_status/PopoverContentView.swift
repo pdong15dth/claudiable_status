@@ -1,5 +1,6 @@
 import SwiftUI
 import Charts
+import ServiceManagement
 
 struct PopoverContentView: View {
     var onQuit: () -> Void
@@ -9,6 +10,7 @@ struct PopoverContentView: View {
     @State private var showingSettingsPopup = false
     @State private var settingsApiKey = ""
     @State private var revealSettingsApiKey = false
+    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var toastMessage: String?
     @State private var toastIsError = false
     @State private var toastTask: Task<Void, Never>?
@@ -199,6 +201,7 @@ struct PopoverContentView: View {
     private func openSettingsPopup() {
         settingsApiKey = APIKeyStore.load()
         revealSettingsApiKey = false
+        launchAtLogin = SMAppService.mainApp.status == .enabled
         showingSettingsPopup = true
     }
 
@@ -268,6 +271,24 @@ struct PopoverContentView: View {
                 Text("API key được lưu cục bộ trong Keychain.")
                     .font(.system(size: 11, weight: .regular, design: .rounded))
                     .foregroundStyle(.gray)
+
+                Divider().overlay(Color.white.opacity(0.15))
+
+                Toggle("Khởi động cùng hệ thống", isOn: $launchAtLogin)
+                    .font(.system(size: 12, weight: .regular, design: .rounded))
+                    .foregroundStyle(.white)
+                    .onChange(of: launchAtLogin) { _, newValue in
+                        do {
+                            if newValue {
+                                try SMAppService.mainApp.register()
+                            } else {
+                                try SMAppService.mainApp.unregister()
+                            }
+                        } catch {
+                            launchAtLogin = !newValue
+                            presentToast("Không thể thay đổi cài đặt khởi động.", isError: true)
+                        }
+                    }
 
                 HStack(spacing: 8) {
                     Button("Xóa key") {
