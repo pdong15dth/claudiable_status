@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 claudiable_status is a **macOS menu bar application** (SwiftUI, macOS 14+) that displays API usage statistics from [Claudible](https://claudible.io). It runs as an accessory app (no dock icon) with a popover dashboard showing balance, usage analytics, spending patterns, and recent activity.
 
+The app display name is **Claudible Status**.
+
 ## Build Commands
 
 ```bash
@@ -16,7 +18,7 @@ xcodebuild -project claudiable_status.xcodeproj -scheme claudiable_status -confi
 xcodebuild -project claudiable_status.xcodeproj -scheme claudiable_status -configuration Debug -derivedDataPath build
 ```
 
-Output: `build/Build/Products/{Release|Debug}/claudiable_status.app`
+Output: `build/Build/Products/{Release|Debug}/Claudible Status.app`
 
 Requires **Xcode 16+** and **macOS 14+** deployment target. No external dependencies — pure Apple frameworks only (SwiftUI, Charts, Observation, Security, SwiftData).
 
@@ -27,13 +29,14 @@ There are no tests in this project.
 Automated via GitHub Actions (`.github/workflows/release.yml`):
 - Tag push (`v*`) or manual workflow dispatch triggers build, code signing, notarization, DMG creation, and Homebrew cask generation.
 - Requires secrets: `MACOS_CERT_P12_BASE64`, `MACOS_CERT_PASSWORD`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`, `APPLE_API_PRIVATE_KEY_BASE64`.
+- `HOMEBREW_TAP_TOKEN` secret enables automatic Homebrew tap updates.
 
 Manual release helper:
 ```bash
 scripts/prepare_homebrew_release.sh <version> <github_owner> <github_repo>
 ```
 
-Distribution via Homebrew: `brew tap pdong15dth/tap && brew install --cask claudiable-status`
+Distribution via Homebrew: `brew tap pdong15dth/tap && brew install --cask --no-quarantine claudiable-status`
 
 ## Architecture (MVVM)
 
@@ -64,3 +67,4 @@ Distribution via Homebrew: `brew tap pdong15dth/tap && brew install --cask claud
 - All source files except the app bundle files (`AppDelegate.swift`, `PopoverContentView.swift`, `claudiable_statusApp.swift`, `ContentView.swift`, `Item.swift`) are at the **project root**, not inside the `claudiable_status/` directory.
 - Error messages in `DashboardServiceError` are in Vietnamese.
 - The app stores the latest balance in `UserDefaults` for offline display and updates it via both REST polling and WebSocket push.
+- App icon is a shamrock (☘️) on dark background with neon green accent.

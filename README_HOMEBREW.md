@@ -6,7 +6,7 @@ Distributed via Homebrew Cask. Releases are fully automated.
 
 ```bash
 brew tap pdong15dth/tap
-brew install --cask claudiable-status
+brew install --cask --no-quarantine claudiable-status
 ```
 
 Update:
@@ -83,7 +83,7 @@ For signed and notarized builds, add these secrets:
 | `APPLE_API_ISSUER_ID` | App Store Connect issuer ID |
 | `APPLE_API_PRIVATE_KEY_BASE64` | API private key (base64) |
 
-Without these, the app will still build and distribute but won't be signed/notarized (users will need to right-click → Open on first launch).
+Without these, the app will still build and distribute but won't be signed/notarized. Users will need to install with `--no-quarantine` flag or run `sudo xattr -rd com.apple.quarantine "/Applications/Claudible Status.app"`.
 
 ## Manual release (alternative)
 
