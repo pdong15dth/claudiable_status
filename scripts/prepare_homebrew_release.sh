@@ -18,7 +18,7 @@ VERSION="$1"
 GITHUB_OWNER="${2:-}"
 GITHUB_REPO="${3:-}"
 
-APP_BUNDLE_PATH="${APP_BUNDLE_PATH:-claudiable_status/Products/claudiable_status.app}"
+APP_BUNDLE_PATH="${APP_BUNDLE_PATH:-claudiable_status/Products/Claudiable Status.app}"
 DIST_DIR="${DIST_DIR:-dist}"
 ZIP_NAME="${ZIP_NAME:-claudiable_status.zip}"
 ZIP_PATH="${DIST_DIR}/${ZIP_NAME}"
@@ -70,11 +70,11 @@ cask "claudiable-status" do
   sha256 "${SHA256}"
 
   url "${DOWNLOAD_URL}"
-  name "claudiable_status"
-  desc "Menu bar dashboard for claudible status"
+  name "Claudiable Status"
+  desc "Menu bar dashboard for Claudiable status"
   homepage "https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}"
 
-  app "claudiable_status.app"
+  app "Claudiable Status.app"
 end
 EOF
 
