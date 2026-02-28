@@ -38,6 +38,12 @@ scripts/prepare_homebrew_release.sh <version> <github_owner> <github_repo>
 
 Distribution via Homebrew: `brew tap pdong15dth/tap && brew install --cask --no-quarantine claudiable-status`
 
+### Version Bump Checklist
+
+When bumping the app version, **all** of the following must be updated together:
+1. `MARKETING_VERSION` in `claudiable_status.xcodeproj/project.pbxproj` (2 occurrences: Debug and Release)
+2. Homebrew cask formula via `scripts/prepare_homebrew_release.sh` or the automated GitHub Actions release workflow (tag push `v*`)
+
 ## Architecture (MVVM)
 
 **App entry & menu bar integration:**
