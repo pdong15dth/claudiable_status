@@ -8,6 +8,8 @@ A macOS menu bar app that displays your [Claudible](https://claudible.io) API us
 - **Live updates** — Real-time balance via WebSocket connection
 - **Usage analytics** — Charts and breakdowns of your API spending
 - **Compact & full modes** — Toggle between a quick glance (420x320) and detailed view (620x760)
+- **Auto-update check** — Notifies you when a new version is available via GitHub Releases
+- **In-app upgrade** — Update directly from the settings panel via Homebrew
 - **Launch at login** — Optionally start with macOS
 - **Dark theme** — Native dark UI with neon green accent
 
@@ -37,6 +39,10 @@ sudo xattr -rd com.apple.quarantine "/Applications/Claudible Status.app"
 ```
 
 ## Update
+
+The app checks for updates automatically and can upgrade itself via Homebrew from the settings panel.
+
+To update manually:
 
 ```bash
 brew update
