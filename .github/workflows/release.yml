@@ -26,6 +26,7 @@ jobs:
       APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
       APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
       APPLE_API_PRIVATE_KEY_BASE64: ${{ secrets.APPLE_API_PRIVATE_KEY_BASE64 }}
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 
     steps:
       - name: Checkout
@@ -267,10 +268,8 @@ jobs:
           generate_release_notes: true
 
       - name: Update Homebrew tap
-        if: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
+        if: ${{ env.HOMEBREW_TAP_TOKEN != '' }}
         shell: bash
-        env:
-          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           set -euo pipefail
 
