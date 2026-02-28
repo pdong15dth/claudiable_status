@@ -265,3 +265,25 @@ jobs:
             dist/claudiable_status.zip.sha256
             dist/claudiable-status-cask.rb
           generate_release_notes: true
+
+      - name: Update Homebrew tap
+        if: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
+        shell: bash
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          TAP_REPO="https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/${{ github.repository_owner }}/homebrew-tap.git"
+          TAP_DIR="$RUNNER_TEMP/homebrew-tap"
+
+          git clone --depth 1 "$TAP_REPO" "$TAP_DIR"
+          mkdir -p "$TAP_DIR/Casks"
+          cp "$DIST_DIR/claudiable-status.rb" "$TAP_DIR/Casks/claudiable-status.rb"
+
+          cd "$TAP_DIR"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/claudiable-status.rb
+          git commit -m "Update claudiable-status to ${{ steps.meta.outputs.version }}" || echo "No changes to commit"
+          git push
