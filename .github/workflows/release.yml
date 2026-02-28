@@ -22,6 +22,55 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Select compatible Xcode
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -t XCODE_APPS < <(find /Applications -maxdepth 1 -type d -name "Xcode*.app" | sort)
+
+          if [[ "${#XCODE_APPS[@]}" -eq 0 ]]; then
+            echo "No Xcode installations found in /Applications."
+            exit 1
+          fi
+
+          BEST_APP=""
+          BEST_VERSION=""
+
+          for app in "${XCODE_APPS[@]}"; do
+            XCBUILD="${app}/Contents/Developer/usr/bin/xcodebuild"
+            if [[ ! -x "$XCBUILD" ]]; then
+              continue
+            fi
+
+            VERSION="$("$XCBUILD" -version | awk 'NR==1 {print $2}')"
+            if [[ -z "$VERSION" ]]; then
+              continue
+            fi
+
+            MAJOR="${VERSION%%.*}"
+            if [[ "$MAJOR" -ge 16 ]]; then
+              if [[ -z "$BEST_VERSION" ]] || [[ "$(printf '%s\n%s\n' "$BEST_VERSION" "$VERSION" | sort -V | tail -n1)" == "$VERSION" ]]; then
+                BEST_APP="$app"
+                BEST_VERSION="$VERSION"
+              fi
+            fi
+          done
+
+          if [[ -z "$BEST_APP" ]]; then
+            echo "No Xcode 16+ installation found. Installed Xcodes:"
+            for app in "${XCODE_APPS[@]}"; do
+              XCBUILD="${app}/Contents/Developer/usr/bin/xcodebuild"
+              if [[ -x "$XCBUILD" ]]; then
+                echo "  - $("$XCBUILD" -version | head -n1) ($app)"
+              fi
+            done
+            exit 1
+          fi
+
+          sudo xcode-select -s "${BEST_APP}/Contents/Developer"
+          echo "Selected Xcode: $(xcodebuild -version | head -n1)"
+
       - name: Resolve version and tag
         id: meta
         shell: bash
