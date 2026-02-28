@@ -7,6 +7,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var balanceObserver: NSObjectProtocol?
     private var apiKeyObserver: NSObjectProtocol?
     private var displayModeObserver: NSObjectProtocol?
+    private var updateCheckTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -55,9 +56,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         Task {
             await refreshBalanceAtLaunch()
         }
+
+        // Schedule update check: once after 5s delay, then every 4 hours
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+            self?.performAutoUpdateCheck()
+            self?.updateCheckTimer = Timer.scheduledTimer(
+                withTimeInterval: AppConfig.updateCheckIntervalSeconds,
+                repeats: true
+            ) { [weak self] _ in
+                self?.performAutoUpdateCheck()
+            }
+        }
     }
 
     deinit {
+        updateCheckTimer?.invalidate()
         if let balanceObserver {
             NotificationCenter.default.removeObserver(balanceObserver)
         }
@@ -133,6 +146,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         Task {
             await refreshBalanceAtLaunch()
+        }
+    }
+
+    private func performAutoUpdateCheck() {
+        guard UpdateChecker.shouldAutoCheck else { return }
+
+        Task {
+            UpdateChecker.recordCheckTime()
+            guard let update = await UpdateChecker.checkForUpdate() else { return }
+
+            // Don't re-notify about a version the user already saw
+            guard update.version != UpdateChecker.lastNotifiedVersion else { return }
+            UpdateChecker.lastNotifiedVersion = update.version
+
+            await MainActor.run {
+                NotificationCenter.default.post(
+                    name: .updateAvailable,
+                    object: nil,
+                    userInfo: ["version": update.version, "url": update.releaseURL]
+                )
+            }
         }
     }
 }
