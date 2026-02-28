@@ -14,6 +14,7 @@
 		0B9A3EA52F53184D003BB337 /* DashboardFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B9A3EA42F53184D003BB337 /* DashboardFormatting.swift */; };
 		0B9A3ECA2F5330C3003BB337 /* APIKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B9A3EC92F5330C3003BB337 /* APIKeyStore.swift */; };
 		0B9A3ECC2F53337B003BB337 /* ToastBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B9A3ECB2F53337B003BB337 /* ToastBanner.swift */; };
+		0B9A3ECF2F53390C003BB337 /* prepare_homebrew_release.sh in Resources */ = {isa = PBXBuildFile; fileRef = 0B9A3ECD2F53390C003BB337 /* prepare_homebrew_release.sh */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +26,7 @@
 		0B9A3EB02F5319E1003BB337 /* claudiable_status.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = claudiable_status.entitlements; sourceTree = "<group>"; };
 		0B9A3EC92F5330C3003BB337 /* APIKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyStore.swift; sourceTree = "<group>"; };
 		0B9A3ECB2F53337B003BB337 /* ToastBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastBanner.swift; sourceTree = "<group>"; };
+		0B9A3ECD2F53390C003BB337 /* prepare_homebrew_release.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = prepare_homebrew_release.sh; sourceTree = "<group>"; };
 		0BB0C57B2F530796003F02F3 /* claudiable_status.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = claudiable_status.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -47,6 +49,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0B9A3ECE2F53390C003BB337 /* scripts */ = {
+			isa = PBXGroup;
+			children = (
+				0B9A3ECD2F53390C003BB337 /* prepare_homebrew_release.sh */,
+			);
+			path = scripts;
+			sourceTree = "<group>";
+		};
 		0BB0C5722F530796003F02F3 = {
 			isa = PBXGroup;
 			children = (
@@ -60,6 +70,7 @@
 				0B9A3EB02F5319E1003BB337 /* claudiable_status.entitlements */,
 				0B9A3EC92F5330C3003BB337 /* APIKeyStore.swift */,
 				0B9A3ECB2F53337B003BB337 /* ToastBanner.swift */,
+				0B9A3ECE2F53390C003BB337 /* scripts */,
 			);
 			sourceTree = "<group>";
 		};
@@ -135,6 +146,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B9A3ECF2F53390C003BB337 /* prepare_homebrew_release.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

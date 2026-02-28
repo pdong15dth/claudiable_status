@@ -1,0 +1,73 @@
+name: Release macOS app
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (without v prefix), example: 1.0.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version and tag
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            VERSION="${{ inputs.version }}"
+            TAG="v${VERSION}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+            VERSION="${TAG#v}"
+          fi
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Build Release app
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project claudiable_status.xcodeproj \
+            -scheme claudiable_status \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Prepare Homebrew assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/prepare_homebrew_release.sh
+          APP_BUNDLE_PATH="build/Build/Products/Release/claudiable_status.app" \
+          DIST_DIR="dist" \
+          scripts/prepare_homebrew_release.sh "${{ steps.meta.outputs.version }}" "${{ github.repository_owner }}" "${{ github.event.repository.name }}"
+
+          cp dist/claudiable-status.rb dist/claudiable-status-cask.rb
+          shasum -a 256 dist/claudiable_status.zip > dist/claudiable_status.zip.sha256
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          files: |
+            dist/claudiable_status.zip
+            dist/claudiable_status.zip.sha256
+            dist/claudiable-status-cask.rb
+          generate_release_notes: true
