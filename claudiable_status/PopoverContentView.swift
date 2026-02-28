@@ -310,9 +310,14 @@ private struct DashboardHeader: View {
                 Text(greeting)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                Text(subtitle)
-                    .font(.system(size: 13, weight: .regular, design: .rounded))
-                    .foregroundStyle(.gray)
+                HStack(spacing: 6) {
+                    Text(subtitle)
+                        .font(.system(size: 13, weight: .regular, design: .rounded))
+                        .foregroundStyle(.gray)
+                    Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")")
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .foregroundStyle(neonGreen.opacity(0.7))
+                }
             }
 
             Spacer()
