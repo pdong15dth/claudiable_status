@@ -1,0 +1,14 @@
+# Build output
+build/
+DerivedData/
+
+# Xcode
+*.xcuserdata
+xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# macOS
+.DS_Store
+
+# Homebrew tap (separate repo)
+homebrew-tap/
