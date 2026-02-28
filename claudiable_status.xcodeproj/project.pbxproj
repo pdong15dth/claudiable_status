@@ -15,6 +15,7 @@
 		0B9A3ECA2F5330C3003BB337 /* APIKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B9A3EC92F5330C3003BB337 /* APIKeyStore.swift */; };
 		0B9A3ECC2F53337B003BB337 /* ToastBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B9A3ECB2F53337B003BB337 /* ToastBanner.swift */; };
 		0B9A3ECF2F53390C003BB337 /* prepare_homebrew_release.sh in Resources */ = {isa = PBXBuildFile; fileRef = 0B9A3ECD2F53390C003BB337 /* prepare_homebrew_release.sh */; };
+		0B9A3ED7E805DA846A32C3BB /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B9A3ED30877432D1026706D /* UpdateChecker.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 		0B9A3ECB2F53337B003BB337 /* ToastBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastBanner.swift; sourceTree = "<group>"; };
 		0B9A3ECD2F53390C003BB337 /* prepare_homebrew_release.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = prepare_homebrew_release.sh; sourceTree = "<group>"; };
 		0BB0C57B2F530796003F02F3 /* Claudible Status.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Claudible Status.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B9A3ED30877432D1026706D /* UpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateChecker.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -70,6 +72,7 @@
 				0B9A3EB02F5319E1003BB337 /* claudiable_status.entitlements */,
 				0B9A3EC92F5330C3003BB337 /* APIKeyStore.swift */,
 				0B9A3ECB2F53337B003BB337 /* ToastBanner.swift */,
+				0B9A3ED30877432D1026706D /* UpdateChecker.swift */,
 				0B9A3ECE2F53390C003BB337 /* scripts */,
 			);
 			sourceTree = "<group>";
@@ -164,6 +167,7 @@
 				0B9A3ECA2F5330C3003BB337 /* APIKeyStore.swift in Sources */,
 				0B9A3E9D2F53183D003BB337 /* AppConfig.swift in Sources */,
 				0B9A3EA52F53184D003BB337 /* DashboardFormatting.swift in Sources */,
+				0B9A3ED7E805DA846A32C3BB /* UpdateChecker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -313,7 +317,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.3.0;
+				MARKETING_VERSION = 1.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "devden.claudiable-status";
 				PRODUCT_NAME = "Claudible Status";
 				REGISTER_APP_GROUPS = YES;
@@ -349,7 +353,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.3.0;
+				MARKETING_VERSION = 1.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "devden.claudiable-status";
 				PRODUCT_NAME = "Claudible Status";
 				REGISTER_APP_GROUPS = YES;
