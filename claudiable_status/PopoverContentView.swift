@@ -115,6 +115,7 @@ struct PopoverContentView: View {
                 subtitle: "Your API usage at a glance",
                 neonGreen: neonGreen,
                 isLoading: viewModel.isLoading,
+                isCompact: displayMode == .compact,
                 onSettings: {
                     openSettingsPopup()
                 },
@@ -606,6 +607,7 @@ private struct DashboardHeader: View {
     let subtitle: String
     let neonGreen: Color
     let isLoading: Bool
+    let isCompact: Bool
     let onSettings: () -> Void
     let onQuit: () -> Void
     let onRefresh: () -> Void
@@ -614,7 +616,7 @@ private struct DashboardHeader: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(greeting)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.system(size: isCompact ? 18 : 28, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                 HStack(spacing: 6) {
                     Text(subtitle)
