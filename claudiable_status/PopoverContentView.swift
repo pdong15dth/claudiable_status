@@ -23,6 +23,8 @@ struct PopoverContentView: View {
     @State private var updateCheckDone = false
     @State private var isHoveringDownload = false
     @State private var isHoveringCheckUpdate = false
+    @State private var isUpgrading = false
+    @State private var upgradeLog = ""
 
     private let neonGreen = Color(red: 0.30, green: 0.80, blue: 0.35)
     private let cardColor = Color(white: 0.10)
@@ -76,7 +78,10 @@ struct PopoverContentView: View {
             NotificationCenter.default.post(name: .dashboardDisplayModeDidChange, object: nil)
         }
         .onReceive(NotificationCenter.default.publisher(for: .updateAvailable)) { notification in
-            if let version = notification.userInfo?["version"] as? String {
+            if let version = notification.userInfo?["version"] as? String,
+               let url = notification.userInfo?["url"] as? URL {
+                availableUpdate = UpdateInfo(version: version, releaseURL: url)
+                updateCheckDone = true
                 presentToast("Có phiên bản mới: v\(version)")
             }
         }
@@ -215,8 +220,6 @@ struct PopoverContentView: View {
         settingsApiKey = APIKeyStore.load()
         revealSettingsApiKey = false
         launchAtLogin = SMAppService.mainApp.status == .enabled
-        updateCheckDone = false
-        availableUpdate = nil
         showingSettingsPopup = true
     }
 
@@ -249,6 +252,52 @@ struct PopoverContentView: View {
         availableUpdate = await UpdateChecker.checkForUpdate()
         isCheckingUpdate = false
         updateCheckDone = true
+    }
+
+    private func performBrewUpgrade() async {
+        isUpgrading = true
+        upgradeLog = ""
+
+        let result = await Task.detached {
+            // Find brew binary
+            let brewPaths = ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]
+            guard let brewPath = brewPaths.first(where: { FileManager.default.fileExists(atPath: $0) }) else {
+                return (success: false, output: "Không tìm thấy Homebrew.")
+            }
+
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: brewPath)
+            process.arguments = ["upgrade", "--cask", "--no-quarantine", "claudiable-status"]
+
+            let pipe = Pipe()
+            process.standardOutput = pipe
+            process.standardError = pipe
+
+            do {
+                try process.run()
+                process.waitUntilExit()
+            } catch {
+                return (success: false, output: "Lỗi: \(error.localizedDescription)")
+            }
+
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+            return (success: process.terminationStatus == 0, output: output)
+        }.value
+
+        await MainActor.run {
+            isUpgrading = false
+            if result.success {
+                upgradeLog = result.output.isEmpty ? "Cập nhật thành công!" : result.output
+                presentToast("Đã cập nhật xong. Khởi động lại app để dùng bản mới.")
+                availableUpdate = nil
+                updateCheckDone = false
+            } else {
+                upgradeLog = result.output
+                presentToast("Cập nhật thất bại.", isError: true)
+            }
+        }
     }
 
     private var settingsPopup: some View {
@@ -411,40 +460,61 @@ struct PopoverContentView: View {
 
                         if updateCheckDone {
                             if let update = availableUpdate {
-                                HStack(spacing: 8) {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "gift.fill")
-                                            .font(.system(size: 10))
-                                            .foregroundStyle(neonGreen)
-                                        Text("v\(update.version)")
-                                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                            .foregroundStyle(neonGreen)
-                                    }
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(neonGreen.opacity(0.12), in: Capsule())
-
-                                    Spacer()
-
-                                    Button {
-                                        NSWorkspace.shared.open(update.releaseURL)
-                                    } label: {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack(spacing: 8) {
                                         HStack(spacing: 4) {
-                                            Image(systemName: "arrow.down.circle.fill")
+                                            Image(systemName: "gift.fill")
                                                 .font(.system(size: 10))
-                                            Text("Tải về")
-                                                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                                .foregroundStyle(neonGreen)
+                                            Text("v\(update.version)")
+                                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                                .foregroundStyle(neonGreen)
                                         }
-                                        .foregroundStyle(isHoveringDownload ? .black : Color(white: 0.05))
-                                        .padding(.horizontal, 12)
+                                        .padding(.horizontal, 8)
                                         .padding(.vertical, 4)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                                .fill(isHoveringDownload ? neonGreen : neonGreen.opacity(0.85))
-                                        )
+                                        .background(neonGreen.opacity(0.12), in: Capsule())
+
+                                        Spacer()
+
+                                        if isUpgrading {
+                                            HStack(spacing: 6) {
+                                                ProgressView()
+                                                    .controlSize(.small)
+                                                    .scaleEffect(0.7)
+                                                Text("Đang cập nhật...")
+                                                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                                                    .foregroundStyle(.gray)
+                                            }
+                                        } else {
+                                            Button {
+                                                Task { await performBrewUpgrade() }
+                                            } label: {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "arrow.down.circle.fill")
+                                                        .font(.system(size: 10))
+                                                    Text("Cập nhật")
+                                                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                                }
+                                                .foregroundStyle(isHoveringDownload ? .black : Color(white: 0.05))
+                                                .padding(.horizontal, 12)
+                                                .padding(.vertical, 4)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                                        .fill(isHoveringDownload ? neonGreen : neonGreen.opacity(0.85))
+                                                )
+                                            }
+                                            .buttonStyle(.plain)
+                                            .onHover { isHoveringDownload = $0 }
+                                        }
                                     }
-                                    .buttonStyle(.plain)
-                                    .onHover { isHoveringDownload = $0 }
+
+                                    if !upgradeLog.isEmpty {
+                                        Text(upgradeLog)
+                                            .font(.system(size: 10, weight: .regular, design: .monospaced))
+                                            .foregroundStyle(.gray)
+                                            .lineLimit(3)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
                                 }
                             } else {
                                 HStack(spacing: 5) {
