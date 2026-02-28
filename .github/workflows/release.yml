@@ -18,7 +18,7 @@ jobs:
   release:
     runs-on: macos-14
     env:
-      APP_PATH: "build/Build/Products/Release/Claudiable Status.app"
+      APP_PATH: "build/Build/Products/Release/Claudible Status.app"
       DIST_DIR: dist
       DMG_PATH: dist/claudiable_status.dmg
       MACOS_CERT_P12_BASE64: ${{ secrets.MACOS_CERT_P12_BASE64 }}
@@ -203,7 +203,7 @@ jobs:
           ln -s /Applications "$STAGE_DIR/Applications"
 
           hdiutil create \
-            -volname "Claudiable Status" \
+            -volname "Claudible Status" \
             -srcfolder "$STAGE_DIR" \
             -ov \
             -format UDZO \
