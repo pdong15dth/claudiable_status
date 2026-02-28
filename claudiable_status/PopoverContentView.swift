@@ -15,6 +15,14 @@ struct PopoverContentView: View {
     @State private var toastIsError = false
     @State private var toastTask: Task<Void, Never>?
     @State private var displayMode = DashboardDisplayMode.loadFromDefaults()
+    @State private var isHoveringSave = false
+    @State private var isHoveringClear = false
+    @State private var isHoveringClose = false
+    @State private var isCheckingUpdate = false
+    @State private var availableUpdate: UpdateInfo?
+    @State private var updateCheckDone = false
+    @State private var isHoveringDownload = false
+    @State private var isHoveringCheckUpdate = false
 
     private let neonGreen = Color(red: 0.30, green: 0.80, blue: 0.35)
     private let cardColor = Color(white: 0.10)
@@ -236,82 +244,271 @@ struct PopoverContentView: View {
                     showingSettingsPopup = false
                 }
 
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 14) {
+                // MARK: Header
                 HStack {
-                    Text("API Settings")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                    HStack(spacing: 6) {
+                        Image(systemName: "key.fill")
+                            .font(.system(size: 13))
+                            .foregroundStyle(neonGreen)
+                        Text("API Settings")
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white)
+                    }
                     Spacer()
                     Button {
                         showingSettingsPopup = false
                     } label: {
                         Image(systemName: "xmark")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(.white)
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(isHoveringClose ? .white : .gray)
                             .frame(width: 24, height: 24)
-                            .background(Color(white: 0.18), in: Circle())
+                            .background(
+                                Circle()
+                                    .fill(isHoveringClose ? Color(white: 0.25) : Color(white: 0.15))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .onHover { isHoveringClose = $0 }
+                }
+
+                // MARK: API Key field with inline eye toggle
+                HStack(spacing: 0) {
+                    Image(systemName: "key.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(neonGreen.opacity(0.6))
+                        .frame(width: 30)
+
+                    Group {
+                        if revealSettingsApiKey {
+                            TextField("Nhập API key...", text: $settingsApiKey)
+                        } else {
+                            SecureField("Nhập API key...", text: $settingsApiKey)
+                        }
+                    }
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13, weight: .regular, design: .monospaced))
+                    .foregroundStyle(.white)
+
+                    Button {
+                        revealSettingsApiKey.toggle()
+                    } label: {
+                        Image(systemName: revealSettingsApiKey ? "eye.fill" : "eye.slash.fill")
+                            .font(.system(size: 11))
+                            .foregroundStyle(revealSettingsApiKey ? neonGreen : .gray)
+                            .frame(width: 30, height: 30)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color(white: 0.06))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(neonGreen.opacity(0.25), lineWidth: 1)
+                )
 
-                Group {
-                    if revealSettingsApiKey {
-                        TextField("API Key", text: $settingsApiKey)
-                            .textFieldStyle(.roundedBorder)
-                    } else {
-                        SecureField("API Key", text: $settingsApiKey)
-                            .textFieldStyle(.roundedBorder)
+                // MARK: Keychain info
+                HStack(spacing: 5) {
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(neonGreen.opacity(0.5))
+                    Text("API key được lưu cục bộ trong Keychain.")
+                        .font(.system(size: 11, weight: .regular, design: .rounded))
+                        .foregroundStyle(.gray)
+                }
+
+                // MARK: Section divider
+                Rectangle()
+                    .fill(neonGreen.opacity(0.15))
+                    .frame(height: 1)
+
+                // MARK: Launch at login toggle
+                Toggle(isOn: $launchAtLogin) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "power")
+                            .font(.system(size: 11))
+                            .foregroundStyle(neonGreen.opacity(0.6))
+                        Text("Khởi động cùng hệ thống")
+                            .font(.system(size: 12, weight: .regular, design: .rounded))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .toggleStyle(.switch)
+                .tint(neonGreen)
+                .onChange(of: launchAtLogin) { _, newValue in
+                    do {
+                        if newValue {
+                            try SMAppService.mainApp.register()
+                        } else {
+                            try SMAppService.mainApp.unregister()
+                        }
+                    } catch {
+                        launchAtLogin = !newValue
+                        presentToast("Không thể thay đổi cài đặt khởi động.", isError: true)
                     }
                 }
 
-                Toggle("Hiện API key", isOn: $revealSettingsApiKey)
-                    .font(.system(size: 12, weight: .regular, design: .rounded))
-                    .foregroundStyle(.gray)
+                // MARK: Section divider
+                Rectangle()
+                    .fill(neonGreen.opacity(0.15))
+                    .frame(height: 1)
 
-                Text("API key được lưu cục bộ trong Keychain.")
-                    .font(.system(size: 11, weight: .regular, design: .rounded))
-                    .foregroundStyle(.gray)
+                // MARK: Check for updates
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 11))
+                            .foregroundStyle(neonGreen.opacity(0.6))
+                        Text("Cập nhật")
+                            .font(.system(size: 12, weight: .regular, design: .rounded))
+                            .foregroundStyle(.white)
 
-                Divider().overlay(Color.white.opacity(0.15))
+                        Spacer()
 
-                Toggle("Khởi động cùng hệ thống", isOn: $launchAtLogin)
-                    .font(.system(size: 12, weight: .regular, design: .rounded))
-                    .foregroundStyle(.white)
-                    .onChange(of: launchAtLogin) { _, newValue in
-                        do {
-                            if newValue {
-                                try SMAppService.mainApp.register()
-                            } else {
-                                try SMAppService.mainApp.unregister()
+                        if isCheckingUpdate {
+                            ProgressView()
+                                .controlSize(.small)
+                                .scaleEffect(0.7)
+                        } else {
+                            Button {
+                                Task { await performUpdateCheck() }
+                            } label: {
+                                Text("Kiểm tra")
+                                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                                    .foregroundStyle(isHoveringCheckUpdate ? .white : .gray)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                            .fill(isHoveringCheckUpdate ? Color(white: 0.20) : Color(white: 0.14))
+                                    )
                             }
-                        } catch {
-                            launchAtLogin = !newValue
-                            presentToast("Không thể thay đổi cài đặt khởi động.", isError: true)
+                            .buttonStyle(.plain)
+                            .onHover { isHoveringCheckUpdate = $0 }
                         }
                     }
 
-                HStack(spacing: 8) {
-                    Button("Xóa key") {
-                        clearSettingsAPIKey()
+                    if updateCheckDone {
+                        if let update = availableUpdate {
+                            HStack(spacing: 8) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "gift.fill")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(neonGreen)
+                                    Text("v\(update.version)")
+                                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                        .foregroundStyle(neonGreen)
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(neonGreen.opacity(0.12), in: Capsule())
+
+                                Spacer()
+
+                                Button {
+                                    NSWorkspace.shared.open(update.releaseURL)
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "arrow.down.circle.fill")
+                                            .font(.system(size: 10))
+                                        Text("Tải về")
+                                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                    }
+                                    .foregroundStyle(isHoveringDownload ? .black : Color(white: 0.05))
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                            .fill(isHoveringDownload ? neonGreen : neonGreen.opacity(0.85))
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .onHover { isHoveringDownload = $0 }
+                            }
+                        } else {
+                            HStack(spacing: 5) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(neonGreen.opacity(0.7))
+                                Text("Đang dùng phiên bản mới nhất.")
+                                    .font(.system(size: 11, weight: .regular, design: .rounded))
+                                    .foregroundStyle(.gray)
+                            }
+                        }
                     }
-                    .buttonStyle(.bordered)
+                }
+
+                // MARK: Section divider
+                Rectangle()
+                    .fill(neonGreen.opacity(0.15))
+                    .frame(height: 1)
+                HStack(spacing: 8) {
+                    Button {
+                        clearSettingsAPIKey()
+                    } label: {
+                        Text("Xóa key")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(isHoveringClear ? .red : Color.red.opacity(0.7))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(isHoveringClear ? Color.red.opacity(0.15) : Color.red.opacity(0.08))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .stroke(isHoveringClear ? Color.red.opacity(0.4) : Color.red.opacity(0.2), lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .onHover { isHoveringClear = $0 }
 
                     Spacer()
 
-                    Button("Lưu") {
+                    Button {
                         saveSettingsAPIKey()
+                    } label: {
+                        Text("Lưu")
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundStyle(isHoveringSave ? .black : Color(white: 0.05))
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(isHoveringSave ? neonGreen : neonGreen.opacity(0.85))
+                            )
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.plain)
+                    .onHover { isHoveringSave = $0 }
                 }
+
+                // MARK: Version info
+                HStack {
+                    Spacer()
+                    Text("Claudible Status v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")")
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundStyle(Color(white: 0.30))
+                    Spacer()
+                }
+                .padding(.top, 2)
             }
             .padding(16)
-            .frame(width: 440)
-            .background(Color(white: 0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .frame(width: panelWidth - 20)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color(white: 0.08))
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(neonGreen.opacity(0.5), lineWidth: 1)
+                    .stroke(neonGreen.opacity(0.35), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 8)
+            .shadow(color: neonGreen.opacity(0.08), radius: 20, x: 0, y: 0)
+            .shadow(color: .black.opacity(0.4), radius: 12, x: 0, y: 8)
         }
     }
 }

@@ -26,48 +26,138 @@ struct SettingsView: View {
     @State private var toastIsError = false
     @State private var toastTask: Task<Void, Never>?
 
+    private let neonGreen = Color(red: 0.30, green: 0.80, blue: 0.35)
+    private let darkBg = Color(white: 0.08)
+    private let cardColor = Color(white: 0.10)
+
     var body: some View {
-        Form {
-            Section("API") {
-                VStack(alignment: .leading, spacing: 8) {
-                    if revealApiKey {
-                        TextField("API Key", text: $apiKey)
-                            .textFieldStyle(.roundedBorder)
-                    } else {
-                        SecureField("API Key", text: $apiKey)
-                            .textFieldStyle(.roundedBorder)
-                    }
+        VStack(alignment: .leading, spacing: 16) {
+            // Header
+            Text("Settings")
+                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
 
-                    HStack {
-                        Toggle("Hiện API key", isOn: $revealApiKey)
-                        Spacer()
-                        Button("Lưu Keychain") {
-                            saveAPIKey()
+            // API Key section
+            VStack(alignment: .leading, spacing: 10) {
+                Text("API")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(neonGreen)
+                    .textCase(.uppercase)
+                    .tracking(1)
+
+                HStack(spacing: 8) {
+                    Image(systemName: "key.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.gray)
+
+                    Group {
+                        if revealApiKey {
+                            TextField("API Key", text: $apiKey)
+                        } else {
+                            SecureField("API Key", text: $apiKey)
                         }
-                        .keyboardShortcut(.return, modifiers: [])
-
-                        Button("Xóa key") {
-                            apiKey = ""
-                            saveAPIKey()
-                        }
                     }
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13, design: .monospaced))
+                    .foregroundStyle(.white)
 
-                    Text("API key được lưu cục bộ trong Keychain.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Button {
+                        revealApiKey.toggle()
+                    } label: {
+                        Image(systemName: revealApiKey ? "eye.slash.fill" : "eye.fill")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.gray)
+                            .frame(width: 24, height: 24)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(Color(white: 0.14), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
 
+                Text("API key được lưu cục bộ trong Keychain.")
+                    .font(.system(size: 11, weight: .regular, design: .rounded))
+                    .foregroundStyle(.gray)
+
+                HStack(spacing: 8) {
+                    Button {
+                        apiKey = ""
+                        saveAPIKey()
+                    } label: {
+                        Text("Xóa key")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(.red.opacity(0.85))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.red.opacity(0.12), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+
+                    Spacer()
+
+                    Button {
+                        saveAPIKey()
+                    } label: {
+                        Text("Lưu Keychain")
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.black)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 6)
+                            .background(neonGreen, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .keyboardShortcut(.return, modifiers: [])
                 }
             }
+            .padding(14)
+            .background(cardColor, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+            )
 
-            LabeledContent("Phiên bản") {
-                Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")
+            // App Info section
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Ứng dụng")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(neonGreen)
+                    .textCase(.uppercase)
+                    .tracking(1)
+
+                HStack {
+                    Text("Phiên bản")
+                        .font(.system(size: 13, weight: .regular, design: .rounded))
+                        .foregroundStyle(.gray)
+                    Spacer()
+                    Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.white)
+                }
+
+                Divider().overlay(Color.white.opacity(0.08))
+
+                HStack {
+                    Text("Build")
+                        .font(.system(size: 13, weight: .regular, design: .rounded))
+                        .foregroundStyle(.gray)
+                    Spacer()
+                    Text(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1")
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.white)
+                }
             }
-            LabeledContent("Build") {
-                Text(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1")
-            }
+            .padding(14)
+            .background(cardColor, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+            )
         }
         .padding(20)
         .frame(width: 420)
+        .background(darkBg)
+        .preferredColorScheme(.dark)
         .onAppear {
             apiKey = APIKeyStore.load()
         }
