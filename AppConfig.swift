@@ -4,6 +4,7 @@ enum AppConfig {
     static let apiKeychainService = "com.claudiable.status"
     static let apiKeychainAccount = "claudible_api_key"
     static let latestBalanceStorageKey = "latest_balance"
+    static let latestCostStorageKey = "latest_cost"
     static let dashboardWebSocketEndpoint = "wss://claudible.io/dashboard/ws"
     static let dashboardDisplayModeStorageKey = "dashboard_display_mode"
     static let githubRepoOwner = "pdong15dth"

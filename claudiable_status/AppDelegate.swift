@@ -105,7 +105,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return "Balance: --"
         }
         let balance = UserDefaults.standard.double(forKey: AppConfig.latestBalanceStorageKey)
-        return "Balance: \(balance.usd)"
+        var title = "Balance: \(balance.usd)"
+        if UserDefaults.standard.object(forKey: AppConfig.latestCostStorageKey) != nil {
+            let cost = UserDefaults.standard.double(forKey: AppConfig.latestCostStorageKey)
+            title += " (-\(cost.usdPrecise))"
+        }
+        return title
     }
 
     private func updatePopoverContentSize() {
@@ -140,6 +145,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard !apiKey.isEmpty else {
             UserDefaults.standard.removeObject(forKey: AppConfig.latestBalanceStorageKey)
+            UserDefaults.standard.removeObject(forKey: AppConfig.latestCostStorageKey)
             updateStatusTitle()
             return
         }

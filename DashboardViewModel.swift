@@ -28,6 +28,7 @@ final class DashboardViewModel {
             errorMessage = "Vui lòng nhập API key trong Settings."
             stopLiveUpdates()
             UserDefaults.standard.removeObject(forKey: AppConfig.latestBalanceStorageKey)
+            UserDefaults.standard.removeObject(forKey: AppConfig.latestCostStorageKey)
             NotificationCenter.default.post(name: .latestBalanceDidChange, object: nil)
             return
         }
@@ -147,6 +148,7 @@ final class DashboardViewModel {
         }
 
         UserDefaults.standard.set(message.data.balance, forKey: AppConfig.latestBalanceStorageKey)
+        UserDefaults.standard.set(message.data.usage.costUSD, forKey: AppConfig.latestCostStorageKey)
         NotificationCenter.default.post(name: .latestBalanceDidChange, object: nil)
     }
 
