@@ -1,5 +1,8 @@
 import Foundation
 import Observation
+import os.log
+
+private let wsLog = Logger(subsystem: "com.claudiable.status", category: "WebSocket")
 
 enum DashboardLiveConnectionState: Sendable {
     case idle
@@ -91,9 +94,11 @@ final class DashboardViewModel {
             do {
                 let socket = try DashboardService.makeDashboardWebSocketTask(apiKey: apiKey)
                 socket.resume()
+                wsLog.info("WebSocket connecting to server...")
                 await onStateChange(.connected)
                 try await consumeWebSocketMessages(from: socket, onMessage: onMessage)
             } catch {
+                wsLog.error("WebSocket error: \(error.localizedDescription, privacy: .public)")
                 if Task.isCancelled {
                     break
                 }

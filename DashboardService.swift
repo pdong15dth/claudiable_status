@@ -42,7 +42,9 @@ enum DashboardService {
             throw URLError(.badURL)
         }
 
-        return URLSession.shared.webSocketTask(with: url)
+        var request = URLRequest(url: url)
+        request.assumesHTTP3Capable = false
+        return URLSession.shared.webSocketTask(with: request)
     }
 
     static func receiveTextMessage(from task: URLSessionWebSocketTask) async throws -> String? {
